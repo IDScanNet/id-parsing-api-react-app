@@ -39,34 +39,69 @@ class App extends Component {
           console.log(steps);
         },
         submit(data) {
+          console.log("submit event handler");
           let backStep = data.steps.find((item) => item.type === "pdf");
 
-          let request = {
-            authKey: "",
-            data: backStep.img.split(/:image\/(jpeg|png);base64,/)[2],
-          };
+          console.log("back step");
+          console.log(data);
 
-          fetch(
-            "https://app1.idware.net/DriverLicenseParserRest.svc/ParseImage",
-            {
+          // if there is a trackString filed we can submit that to the String Web API endpoint
+          // which is much more reliable in terms of its ability to parse the data
+          if (backStep.trackString) {
+            let request = {
+              authKey: "",
+              text: backStep.trackString,
+            };
+
+            console.log("Track string path");
+
+            fetch("https://app1.idware.net/DriverLicenseParserRest.svc/Parse", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json;charset=utf-8",
               },
               body: JSON.stringify(request),
-            }
-          )
-            .then((response) => response.json())
-            .then((data) => {
-              console.log(data);
-              _t.setState({
-                Birthdate: data.ParseImageResult.DriverLicense.Birthdate,
-                Fullname: data.ParseImageResult.DriverLicense.FullName,
-                Address1: data.ParseImageResult.DriverLicense.Address1,
-                City: data.ParseImageResult.DriverLicense.City,
-              });
             })
-            .catch(() => {});
+              .then((response) => response.json())
+              .then((data) => {
+                console.log(data);
+                _t.setState({
+                  Birthdate: data.ParseResult.DriverLicense.Birthdate,
+                  Fullname: data.ParseResult.DriverLicense.FullName,
+                  Address1: data.ParseResult.DriverLicense.Address1,
+                  City: data.ParseResult.DriverLicense.City,
+                });
+              })
+              .catch(() => {});
+          } else {
+            console.log("ID image path");
+            let request = {
+              authKey: "",
+              data: backStep.img.split(/:image\/(jpeg|png);base64,/)[2],
+            };
+
+            fetch(
+              "https://app1.idware.net/DriverLicenseParserRest.svc/ParseImage",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json;charset=utf-8",
+                },
+                body: JSON.stringify(request),
+              }
+            )
+              .then((response) => response.json())
+              .then((data) => {
+                console.log(data);
+                _t.setState({
+                  Birthdate: data.ParseImageResult.DriverLicense.Birthdate,
+                  Fullname: data.ParseImageResult.DriverLicense.FullName,
+                  Address1: data.ParseImageResult.DriverLicense.Address1,
+                  City: data.ParseImageResult.DriverLicense.City,
+                });
+              })
+              .catch(() => {});
+          }
         },
       });
     }
