@@ -1,4 +1,4 @@
-## How to Integrate a Web Applicaiton using the Idscan.net Web Library with our ID Parsing Web API
+## How to Integrate a Web Application using the Idscan.net Web Library with our ID Parsing Web API
 
 This applicaiton will show you how to use our web library (avaiable on NPM) to sumbit data to our ID Parsing Web API. 
 
