@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import "../node_modules/@idscan/idvc/dist/css/idvc.css";
 import IDVC from '@idscan/idvc'
 import  '@idscan/idvc/dist/css/idvc.css'
 
@@ -17,21 +16,25 @@ class App extends Component {
      this.onInputchange = this.onInputchange.bind(this);
   }
 
-  componentWillUnmount() {
-    this.state.component.stopProccesing();
-  }
-
   componentDidMount() {
     let _t = this;
+    
+    let _authKey = ;
+    let _licenseKey =
+      ;
+
     if (!this.state.component) {
       this.state.component = new IDVC({
         networkUrl: "assets/networks",
         el: "videoCapturingEl",
-        licenseKey:
-          "",
+        licenseKey: _licenseKey,
         types: ["ID"],
         showSubmitBtn: true,
-        steps: [{ type: "pdf", name: "Back Scan" }],
+        showPreviewForOneStep: false,
+        parseMRZ: true,
+        steps: [
+          { type: "back", name: "Back of the Document" }
+        ],
         onChange(step) {
           console.log(step);
         },
@@ -39,32 +42,24 @@ class App extends Component {
           console.log(steps);
         },
         submit(data) {
-          console.log("submit event handler");
-          let backStep = data.steps.find((item) => item.type === "pdf");
-
-          console.log("back step");
-          console.log(data);
-
-          // if there is a trackString filed we can submit that to the String Web API endpoint
-          // which is much more reliable in terms of its ability to parse the data
+          
+          let backStep = data.steps.find((item) => item.type === "back");
+                 
           if (backStep.trackString) {
-            let request = {
-              authKey: "",
-              text: backStep.trackString,
-            };
+              let request = {
+                authKey: _authKey,
+                text: backStep.trackString,
+              };
 
-            console.log("Track string path");
-
-            fetch("https://app1.idware.net/DriverLicenseParserRest.svc/Parse", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json;charset=utf-8",
-              },
-              body: JSON.stringify(request),
-            })
+              fetch("https://app1.idware.net/DriverLicenseParserRest.svc/Parse", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json;charset=utf-8",
+                },
+                body: JSON.stringify(request),
+              })
               .then((response) => response.json())
               .then((data) => {
-                console.log(data);
                 _t.setState({
                   Birthdate: data.ParseResult.DriverLicense.Birthdate,
                   Fullname: data.ParseResult.DriverLicense.FullName,
@@ -72,11 +67,14 @@ class App extends Component {
                   City: data.ParseResult.DriverLicense.City,
                 });
               })
-              .catch(() => {});
+              .catch((err) => {
+                console.err(err);
+              });
+
           } else {
-            console.log("ID image path");
+          
             let request = {
-              authKey: "",
+              authKey: _authKey,
               data: backStep.img.split(/:image\/(jpeg|png);base64,/)[2],
             };
 
@@ -90,17 +88,19 @@ class App extends Component {
                 body: JSON.stringify(request),
               }
             )
-              .then((response) => response.json())
-              .then((data) => {
-                console.log(data);
-                _t.setState({
-                  Birthdate: data.ParseImageResult.DriverLicense.Birthdate,
-                  Fullname: data.ParseImageResult.DriverLicense.FullName,
-                  Address1: data.ParseImageResult.DriverLicense.Address1,
-                  City: data.ParseImageResult.DriverLicense.City,
-                });
-              })
-              .catch(() => {});
+            .then((response) => response.json())
+            .then((data) => {
+              console.log(data);
+              _t.setState({
+                Birthdate: data.ParseImageResult.DriverLicense.Birthdate,
+                Fullname: data.ParseImageResult.DriverLicense.FullName,
+                Address1: data.ParseImageResult.DriverLicense.Address1,
+                City: data.ParseImageResult.DriverLicense.City,
+              });
+            })
+            .catch((err) => {
+              console.err(err);
+            });
           }
         },
       });
@@ -117,7 +117,7 @@ class App extends Component {
     return (
       <div>
         <div>
-          <h3>DVS Demo Application</h3>
+          <h3>ID Parsing Web Service Demo Application</h3>
           <div id="videoCapturingEl"></div>
         </div>
         <div style={{ margin: "50px" }}>
@@ -154,6 +154,7 @@ class App extends Component {
             />
           </div>
         </div>
+        <div id="console" ></div>
       </div>
     );
   }

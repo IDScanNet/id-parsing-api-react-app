@@ -1,9 +1,9 @@
 {
-  "name": "react-sample-app",
+  "name": "id-parsing-react-sample-app",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@idscan/idvc": "^1.9.13",
+    "@idscan/idvc": "^1.12.20",
     "materialize-css": "^1.0.0-rc.2",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
