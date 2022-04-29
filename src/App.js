@@ -19,16 +19,16 @@ class App extends Component {
   componentDidMount() {
     let _t = this;
     
-    let _authKey = ;
-    let _licenseKey =
-      ;
+    let _authKey = "";
+    let _licenseKey = "";
 
     if (!this.state.component) {
-      this.state.component = new IDVC({
+      _t.setState({ component: new IDVC({
         networkUrl: "assets/networks",
         el: "videoCapturingEl",
         licenseKey: _licenseKey,
         types: ["ID"],
+        enableLimitation: false,
         showSubmitBtn: true,
         showPreviewForOneStep: false,
         parseMRZ: true,
@@ -68,10 +68,11 @@ class App extends Component {
                 });
               })
               .catch((err) => {
-                console.err(err);
+                console.log(err);
               });
 
-          } else {
+          } 
+          else {
           
             let request = {
               authKey: _authKey,
@@ -99,11 +100,12 @@ class App extends Component {
               });
             })
             .catch((err) => {
-              console.err(err);
+              console.log(err);
             });
           }
         },
-      });
+      })
+    });
     }
   }
 

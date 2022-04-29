@@ -3,20 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@idscan/idvc": "^1.12.20",
-    "materialize-css": "^1.0.0-rc.2",
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1",
-    "react-scripts": "3.4.3"
-  },
-  "devDependencies": {
-    "gulp": "^4.0.2"
+    "@idscan/idvc": "^1.12.21",
+    "react": "^18.1.0",
+    "react-dom": "^18.1.0",
+    "react-scripts": "^5.0.1"
   },
   "scripts": {
     "start": "react-scripts --max_old_space_size=4096 start",
     "build": "react-scripts --max_old_space_size=4096 build",
-    "eject": "react-scripts eject",
-    "copyNetworks": "gulp"
+    "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": "react-app"
