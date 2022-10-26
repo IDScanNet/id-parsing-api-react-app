@@ -1,6 +1,7 @@
+/* eslint-disable no-fallthrough */
 import React, { Component } from "react";
-import IDVC from '@idscan/idvc'
-import  '@idscan/idvc/dist/css/idvc.css'
+import IDVC from "@idscan/idvc2";
+import "../node_modules/@idscan/idvc2/dist/css/idvc.css";
 
 class App extends Component {
   constructor(props) {
@@ -10,7 +11,7 @@ class App extends Component {
       Fullname: "",
       Address1: "",
       City: "",
-      component: null,
+      idvc: null,
     };
 
      this.onInputchange = this.onInputchange.bind(this);
@@ -23,89 +24,201 @@ class App extends Component {
     let _licenseKey = "";
 
     if (!this.state.component) {
-      _t.setState({ component: new IDVC({
-        networkUrl: "assets/networks",
-        el: "videoCapturingEl",
-        licenseKey: _licenseKey,
-        types: ["ID"],
-        enableLimitation: false,
-        showSubmitBtn: true,
-        showPreviewForOneStep: false,
-        parseMRZ: true,
-        steps: [
-          { type: "back", name: "Back of the Document" }
-        ],
-        onChange(step) {
-          console.log(step);
-        },
-        onReset(steps) {
-          console.log(steps);
-        },
-        submit(data) {
-          
-          let backStep = data.steps.find((item) => item.type === "back");
-                 
-          if (backStep.trackString) {
+      _t.setState({ idvc: new IDVC({
+            el: "videoCapturingEl",
+            licenseKey: "LICENSE_KEY",
+            networkUrl: "networks",
+            resizeUploadedImage: 1600,
+            fixFrontOrientAfterUpload: true,
+            autoContinue: true,
+            isShowDocumentTypeSelect: true,
+            realFaceMode: "auto",
+            useCDN: true,
+            language: "en",
+            isShowGuidelinesButton: true,
+            documentTypes: [
+              {
+                type: "ID",
+                steps: [
+                  {
+                    type: "front",
+                    name: "Document Front",
+                    mode: { uploader: true, video: true },
+                  },
+                  {
+                    type: "pdf",
+                    name: "Document PDF417 Barcode",
+                    mode: { uploader: true, video: true },
+                  },
+                  {
+                    type: "face",
+                    name: "Face",
+                    mode: { uploader: true, video: true },
+                  },
+                ],
+              },
+              {
+                type: "Passport",
+                steps: [
+                  {
+                    type: "mrz",
+                    name: "Passport Front",
+                    mode: { uploader: true, video: true },
+                  },
+                  {
+                    type: "face",
+                    name: "Face",
+                    mode: { uploader: true, video: true },
+                  },
+                ],
+              },
+            ],
+            onChange(data) {
+              console.log("on change", data);
+            },
+            onCameraError(data) {
+              console.log("camera error", data);
+            },
+            onReset(data) {
+              console.log("on reset", data);
+            },
+            onRetakeHook(data) {
+              console.log("retake hook", data);
+            },
+            clickGuidlines() {
+              console.log("click Guidelines");
+            },
+            submit(data) {
+              _t.state.idvc.showSpinner(true);
+              let frontStep, pdfStep, faceStep, mrzStep, photoStep, barcodeStep;
+              let frontImage, backImage, faceImage, photoImage, barcodeImage;
+              let trackString;
+              let captureMethod;
+              let verifyFace = true;
+              
+              switch (data.documentType) {
+                // Drivers License and Identification Card
+                case 1:
+                  frontStep = data.steps.find((item) => item.type === "front");
+                  pdfStep = data.steps.find((item) => item.type === "pdf");
+                  faceStep = data.steps.find((item) => item.type === "face");
+
+                  frontImage = frontStep.img.split(
+                    /:image\/(jpeg|png);base64,/
+                  )[2];
+                  backImage = pdfStep.img.split(
+                    /:image\/(jpeg|png);base64,/
+                  )[2];
+                  faceImage = faceStep.img.split(
+                    /:image\/(jpeg|png);base64,/
+                  )[2];
+
+                  trackString =
+                    pdfStep && pdfStep.trackString ? pdfStep.trackString : "";
+
+                  captureMethod =
+                    JSON.stringify(+frontStep.isAuto) +
+                    JSON.stringify(+pdfStep.isAuto) +
+                    JSON.stringify(+faceStep.isAuto);
+
+                  break;
+                // US and International Passports
+                case 2:
+                  mrzStep = data.steps.find((item) => item.type === "mrz");
+                  faceStep = data.steps.find((item) => item.type === "face");
+
+                  frontImage = mrzStep.img.split(
+                    /:image\/(jpeg|png);base64,/
+                  )[2];
+                  faceImage = faceStep.img.split(
+                    /:image\/(jpeg|png);base64,/
+                  )[2];
+
+                  trackString =
+                    mrzStep && mrzStep.mrzText ? mrzStep.mrzText : "";
+
+                  captureMethod =
+                    JSON.stringify(+mrzStep.isAuto) +
+                    JSON.stringify(+faceStep.isAuto);
+
+                  break;
+                // // US Passport Cards
+                case 3:
+                // // US Green Cards
+                case 6:
+                // International IDs with 3 line MRZs
+                case 7:
+                  frontStep = data.steps.find((item) => item.type === "front");
+                  mrzStep = data.steps.find((item) => item.type === "mrz");
+                  faceStep = data.steps.find((item) => item.type === "face");
+
+                  frontImage = frontStep.img.split(
+                    /:image\/(jpeg|png);base64,/
+                  )[2];
+                  backImage = mrzStep.img.split(
+                    /:image\/(jpeg|png);base64,/
+                  )[2];
+                  faceImage = faceStep.img.split(
+                    /:image\/(jpeg|png);base64,/
+                  )[2];
+
+                  trackString =
+                    mrzStep && mrzStep.mrzText ? mrzStep.mrzText : "";
+
+                  captureMethod =
+                    JSON.stringify(+frontStep.isAuto) +
+                    JSON.stringify(+mrzStep.isAuto) +
+                    JSON.stringify(+faceStep.isAuto);
+
+                  break;
+                case 8:
+                // photoStep = data.steps.find((item) => item.type === "photo");
+                // photoImage = photoStep.img.split(/:image\/(jpeg|png);base64,/)[2];
+                // captureMethod = JSON.stringify(+photoStep.isAuto);
+                // verifyFace = false;
+                // break;
+                case 9:
+                  // barcodeStep = data.steps.find((item) => item.type === "barcode");
+                  // barcodeImage = barcodeStep.img.split(/:image\/(jpeg|png);base64,/)[2];
+                  // captureMethod = JSON.stringify(+barcodeStep.isAuto);
+                  // verifyFace = false;
+                  break;
+                default:
+              }
+
               let request = {
-                authKey: _authKey,
-                text: backStep.trackString,
+                frontImageBase64: frontImage,
+                backOrSecondImageBase64: backImage,
+                faceImageBase64: faceImage,
+                documentType: data.documentType,
+                trackString: trackString,
+                ssn: null,
+                overriddenSettings: null,
+                userAgent: window.navigator.userAgent,
+                captureMethod: captureMethod,
+                verifyFace: verifyFace,
               };
 
-              fetch("https://app1.idware.net/DriverLicenseParserRest.svc/Parse", {
+              fetch("https://dvs2.idware.net/api/v3/Verify", {
                 method: "POST",
                 headers: {
+                  Authorization: "Bearer SECRET_KEY",
                   "Content-Type": "application/json;charset=utf-8",
                 },
                 body: JSON.stringify(request),
               })
-              .then((response) => response.json())
-              .then((data) => {
-                _t.setState({
-                  Birthdate: data.ParseResult.DriverLicense.Birthdate,
-                  Fullname: data.ParseResult.DriverLicense.FullName,
-                  Address1: data.ParseResult.DriverLicense.Address1,
-                  City: data.ParseResult.DriverLicense.City,
+                .then((response) => response.json())
+                .then((data) => {
+                  _t.state.idvc.showSpinner(false);
+                  console.log(data);
+                })
+                .catch((err) => {
+                  _t.state.idvc.showSpinner(false);
+                  console.log(err);
                 });
-              })
-              .catch((err) => {
-                console.log(err);
-              });
-
-          } 
-          else {
-          
-            let request = {
-              authKey: _authKey,
-              data: backStep.img.split(/:image\/(jpeg|png);base64,/)[2],
-            };
-
-            fetch(
-              "https://app1.idware.net/DriverLicenseParserRest.svc/ParseImage",
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json;charset=utf-8",
-                },
-                body: JSON.stringify(request),
-              }
-            )
-            .then((response) => response.json())
-            .then((data) => {
-              console.log(data);
-              _t.setState({
-                Birthdate: data.ParseImageResult.DriverLicense.Birthdate,
-                Fullname: data.ParseImageResult.DriverLicense.FullName,
-                Address1: data.ParseImageResult.DriverLicense.Address1,
-                City: data.ParseImageResult.DriverLicense.City,
-              });
-            })
-            .catch((err) => {
-              console.log(err);
-            });
-          }
-        },
-      })
-    });
+            },
+          })
+      });
     }
   }
 
